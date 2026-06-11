@@ -31,8 +31,8 @@ INFERENCE_EVERY_N_FRAMES = 5
 # Keep False if using SSH or no monitor
 SHOW_PREVIEW = False
 
-
-
+#toggle embedding size
+EMBEDDING_DIM = 128
 
 # =========================
 # CAMERA SETTINGS
@@ -132,8 +132,8 @@ def get_embedding(frame, model, preprocess, device):
         emb = emb / emb.norm(dim=-1, keepdim=True)
 
 
-    # Return float32 numpy array with shape [1, 512]
-    return emb.cpu().numpy().astype(np.float32)
+# Dynamically slice before returning
+    return emb.cpu().numpy().astype(np.float32)[:, :EMBEDDING_DIM]
 
 
 
@@ -196,7 +196,7 @@ def main():
                 "model": "MobileCLIP-S1",
                 "device": device,
                 "embedding_topic": TOPIC_CLIP,
-                "embedding_shape": [1, 512],
+                "embedding_shape": [1, EMBEDDING_DIM],
                 "dtype": "float32",
                 "inference_every_n_frames": INFERENCE_EVERY_N_FRAMES
             }
