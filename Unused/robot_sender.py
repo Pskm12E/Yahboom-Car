@@ -24,6 +24,7 @@ TOPIC_CLIP = "yahboom/vit/embedding"
 TOPIC_STATUS = "yahboom/vit/status"
 
 
+
 # Run MobileCLIP every N frames
 INFERENCE_EVERY_N_FRAMES = 5
 
@@ -31,8 +32,7 @@ INFERENCE_EVERY_N_FRAMES = 5
 # Keep False if using SSH or no monitor
 SHOW_PREVIEW = False
 
-#toggle embedding size
-EMBEDDING_DIM = 128
+
 
 # =========================
 # CAMERA SETTINGS
@@ -272,7 +272,8 @@ def main():
                                 "embeddings_sent": embedding_count,
                                 "embedding_shape": list(embedding.shape),
                                 "dtype": str(embedding.dtype),
-                                "topic": TOPIC_CLIP
+                                "topic": TOPIC_CLIP,
+                                "image_payload_size_bytes": frame.nbytes
                             }
                         )
 
