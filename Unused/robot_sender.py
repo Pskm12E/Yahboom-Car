@@ -133,7 +133,7 @@ def get_embedding(frame, model, preprocess, device):
 
 
 # Dynamically slice before returning
-    return emb.cpu().numpy().astype(np.float32)[:, :EMBEDDING_DIM]
+    return emb.cpu().numpy().astype(np.float32)  # [1, 512] = 2048 bytes
 
 
 
