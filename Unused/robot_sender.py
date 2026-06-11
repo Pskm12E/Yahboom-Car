@@ -261,6 +261,8 @@ def main():
                         print(
                             f"Published {embedding_count} embeddings "
                             f"at frame {frame_count}"
+                            f"raw image size is {frame.nbytes} bytes"
+                            f"embedding size is {embedding.nbytes} bytes"
                         )
 
 
