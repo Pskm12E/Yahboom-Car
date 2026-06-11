@@ -196,7 +196,7 @@ def main():
                 "model": "MobileCLIP-S1",
                 "device": device,
                 "embedding_topic": TOPIC_CLIP,
-                "embedding_shape": [1, EMBEDDING_DIM],
+                "embedding_shape": [1, 512],
                 "dtype": "float32",
                 "inference_every_n_frames": INFERENCE_EVERY_N_FRAMES
             }
