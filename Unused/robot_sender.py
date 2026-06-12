@@ -57,7 +57,15 @@ def create_mqtt_client():
     return client
 
 
+#change the byte sizes
 
+# Options: 512 (128-dim), 1024 (256-dim), 2048 (512-dim full)
+EMBEDDING_BYTES = 2048  # <-- Change this to 512, 1024, or 2048
+EMBEDDING_BYTES_TO_DIMS = {
+    512: 128,    # 128 dims × 4 bytes = 512 bytes
+    1024: 256,   # 256 dims × 4 bytes = 1024 bytes
+    2048: 512    # 512 dims × 4 bytes = 2048 bytes  ← default (original)
+}
 
 def publish_status(client, status, extra=None):
     payload = {
@@ -133,7 +141,7 @@ def get_embedding(frame, model, preprocess, device):
 
 
 # Dynamically slice before returning
-    return emb.cpu().numpy().astype(np.float32)  # [1, 512] = 2048 bytes
+    return emb.cpu().numpy().astype(np.float32)[:, :EMBEDDING_BYTES_TO_DIMS[EMBEDDING_BYTES]]  # [1, 512] = 2048 bytes
 
 
 
