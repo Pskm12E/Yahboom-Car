@@ -10,6 +10,7 @@ import paho.mqtt.client as mqtt
 import time
 import json
 import sys
+import base64
 
 
 
@@ -253,27 +254,28 @@ def main():
             if frame_count % INFERENCE_EVERY_N_FRAMES == 0:
                 try:
                     embedding = get_embedding(frame, model, preprocess, device)
+                    raw_bytes = embedding.tobytes()
+                    image_file_size = int(frame.nbytes)
 
-
-                    mqtt_client.publish(
-                        TOPIC_CLIP,
-                        embedding.tobytes(),
-                        qos=0
-                    )
-
+                    # JSON envelope so the dashboard decoder can attach original
+                    # image size to each CSV row (see vit_service._parse_embedding_payload).
+                    payload = json.dumps({
+                        "raw_bytes": len(raw_bytes),
+                        "embedding_dim": int(embedding.shape[-1]),
+                        "dtype": "float32",
+                        "frame": frame_count,
+                        "image_file_size": image_file_size,
+                        "data": base64.b64encode(raw_bytes).decode("utf-8"),
+                    })
+                    mqtt_client.publish(TOPIC_CLIP, payload, qos=0)
 
                     embedding_count += 1
 
-
                     if embedding_count % 10 == 0:
                         print(
-                            f"Published {embedding_count} embeddings "
-                            f"at frame {frame_count}"
-                            f"raw image size is {frame.nbytes} bytes"
-                            f"embedding size is {embedding.nbytes} bytes"
+                            f"Published {embedding_count} embeddings at frame {frame_count} "
+                            f"(image {image_file_size} B, embedding {len(raw_bytes)} B)"
                         )
-
-
                         publish_status(
                             mqtt_client,
                             "running",
@@ -281,10 +283,12 @@ def main():
                                 "frames_seen": frame_count,
                                 "embeddings_sent": embedding_count,
                                 "embedding_shape": list(embedding.shape),
+                                "embedding_size_bytes": len(raw_bytes),
                                 "dtype": str(embedding.dtype),
                                 "topic": TOPIC_CLIP,
-                                "image_payload_size_bytes": frame.nbytes
-                            }
+                                "image_file_size": image_file_size,
+                                "image_payload_size_bytes": image_file_size,
+                            },
                         )
 
 
