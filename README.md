@@ -10,10 +10,7 @@ The system is split into four main files:
 2. `lidar_safety_node.py`
    Monitors the LiDAR front area and triggers either a hard emergency stop in manual mode or a soft stop in auto mode.
 
-3. `robot_sender.py`
-   Runs MobileCLIP-S1 on camera frames and publishes image embeddings to MQTT.
-
-4. `webrtc_server.py`
+3. `webrtc_server.py`
    Streams live video to a browser using WebRTC and also runs MobileCLIP-S1 embedding publishing in the background.
 
 ---
@@ -756,186 +753,11 @@ It:
 
 ---
 
-# 3. `robot_sender.py`
-
-This file runs MobileCLIP-S1 on the robot camera feed and publishes image embeddings through MQTT.
-
-## Main Purpose
-
-`robot_sender.py` is responsible for:
-
-* Opening the robot camera.
-* Loading MobileCLIP-S1.
-* Capturing camera frames.
-* Running image embedding inference every few frames.
-* Publishing image embeddings to MQTT.
-* Publishing VIT status updates to MQTT.
-
----
-
-## Important MQTT Topics
-
-### `yahboom/vit/embedding`
-
-The image embedding is published here.
-
-The payload includes:
-
-* Raw embedding size
-* Embedding dimension
-* Data type
-* Frame number
-* Image file size
-* Base64 encoded embedding data
-
-### `yahboom/vit/status`
-
-Status messages are published here.
-
-Example statuses:
-
-```text
-vit_encoder_started
-running
-camera_error
-embedding_error
-fatal_error
-vit_encoder_stopped
-```
-
----
-
-## Important Settings
-
-### `INFERENCE_EVERY_N_FRAMES = 5`
-
-The model does not run on every frame.
-
-It runs once every 5 frames to reduce processing load.
-
-### `EMBEDDING_BYTES = 2048`
-
-This controls the embedding size.
-
-Options:
-
-```text
-512 bytes  = 128 dimensions
-1024 bytes = 256 dimensions
-2048 bytes = 512 dimensions
-```
-
-### `SHOW_PREVIEW = False`
-
-This should stay `False` when running over SSH or without a monitor.
-
----
-
-## Functions in `robot_sender.py`
-
-### `create_mqtt_client()`
-
-Creates the MQTT client.
-
-It supports both newer and older versions of the Paho MQTT library.
-
----
-
-### `publish_status(client, status, extra=None)`
-
-Publishes status information to:
-
-```text
-yahboom/vit/status
-```
-
-The message includes:
-
-* Status text
-* Timestamp
-* Extra information if provided
-
-This is used to let the dashboard know whether the VIT encoder is running, stopped, or facing errors.
-
----
-
-### `load_model()`
-
-Loads the MobileCLIP-S1 model using `open_clip`.
-
-It chooses the device automatically:
-
-* Uses CUDA if available.
-* Uses CPU if CUDA is not available.
-
-It returns:
-
-```python
-model
-preprocess
-device
-```
-
-These are needed for image embedding inference.
-
----
-
-### `get_embedding(frame, model, preprocess, device)`
-
-Converts one camera frame into an image embedding.
-
-Steps:
-
-1. Converts OpenCV BGR image to RGB.
-2. Converts the frame into a PIL image.
-3. Applies MobileCLIP preprocessing.
-4. Sends the image through the model.
-5. Normalizes the embedding.
-6. Slices the embedding based on the selected byte size.
-7. Returns the embedding as a NumPy float32 array.
-
----
-
-### `open_camera()`
-
-Opens the camera using OpenCV.
-
-It uses:
-
-```python
-CAMERA_INDEX = 0
-CAMERA_WIDTH = 640
-CAMERA_HEIGHT = 480
-```
-
-If the camera cannot be opened, it returns `None`.
-
----
-
-### `main()`
-
-Runs the full VIT sender program.
-
-It:
-
-1. Loads the MobileCLIP-S1 model.
-2. Connects to MQTT.
-3. Publishes `vit_encoder_started`.
-4. Opens the camera.
-5. Reads frames in a loop.
-6. Runs embedding inference every 5 frames.
-7. Publishes embeddings to MQTT.
-8. Publishes running status every 10 embeddings.
-9. Handles errors.
-10. Releases the camera and disconnects MQTT when stopped.
-
----
-
-# 4. `webrtc_server.py`
+# 3. `webrtc_server.py`
 
 This file provides live browser video streaming using WebRTC.
 
-It also includes MobileCLIP-S1 embedding publishing, similar to `robot_sender.py`, but combined with the WebRTC video server.
+It also includes MobileCLIP-S1 embedding publishing, combined with the WebRTC video server.
 
 ## Main Purpose
 
@@ -1436,11 +1258,6 @@ python3 lidar_safety_node.py
 python3 webrtc_server.py
 ```
 
-If only VIT embedding is needed without WebRTC video:
-
-```bash
-python3 robot_sender.py
-```
 
 ---
 
@@ -1494,7 +1311,6 @@ mosquitto_pub -h localhost -t yahboom/vit/command -m "embds1"
 
 * `mqtt_ros_node.py` is the main robot control node.
 * `lidar_safety_node.py` is the safety monitoring node.
-* `robot_sender.py` is only for VIT embedding publishing.
 * `webrtc_server.py` combines live WebRTC video and VIT embedding publishing.
 * In manual mode, LiDAR obstacles trigger a hard emergency stop.
 * In auto mode, LiDAR obstacles trigger a soft stop only.
