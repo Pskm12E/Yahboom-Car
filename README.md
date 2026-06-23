@@ -2,7 +2,7 @@
 
 This project contains the main Python scripts used to control the Yahboom robot through MQTT and ROS 2, monitor LiDAR safety, stream live camera video using WebRTC, and publish MobileCLIP/VIT image embeddings over MQTT.
 
-The system is split into four main files:
+The system is split into three main files:
 
 1. `mqtt_ros_node.py`
    Handles robot movement, camera servo control, LiDAR grid publishing, auto movement, and emergency-stop state.
@@ -60,6 +60,7 @@ cright
 up
 down
 crst
+
 ```
 
 ### `yahboom/grid`
@@ -1247,15 +1248,15 @@ embds3      2048-byte embedding, 512 dimensions
 A typical run order is:
 
 ```bash
-python3 mqtt_ros_node.py
+python3 Used/mqtt_ros_node.py
 ```
 
 ```bash
-python3 lidar_safety_node.py
+python3 Used/lidar_safety_node.py
 ```
 
 ```bash
-python3 webrtc_server.py
+python3 Used/webrtc_server.py
 ```
 
 
